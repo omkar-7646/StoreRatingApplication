@@ -9,6 +9,7 @@ import adminRoutes from "./routes/admin.js";
 import storeRoutes from "./routes/stores.js";
 import ratingRoutes from "./routes/ratings.js";
 import userRoutes from "./routes/users.js";
+import ownerRoutes from "./routes/owner.js";
 
 const app = express();
 app.use(cors({ origin: process.env.FRONTEND_URL || "http://localhost:3000", credentials: true }));
@@ -19,6 +20,7 @@ app.use("/api/admin", adminRoutes);
 app.use("/api/stores", storeRoutes);
 app.use("/api/ratings", ratingRoutes);
 app.use("/api/users", userRoutes);
+app.use("/api/owner", ownerRoutes);
 
 app.get("/", (req, res) => res.send("Store Rating API"));
 

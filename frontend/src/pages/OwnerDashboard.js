@@ -7,9 +7,33 @@ export default function OwnerDashboard() {
   const [ratings, setRatings] = useState([]);
 
   useEffect(() => {
-    API.get("/stores/owner").then((res) => setStore(res.data));
+    API.get("/owner/stores").then((res) => setStore(res.data)).catch(error => {
 
-    API.get("/ratings/owner").then((res) => setRatings(res.data));
+    if (error.response) {
+
+      // Server responded with status code (4xx or 5xx)
+
+      console.log("Server Error:", error.response.data);
+
+      console.log("Status Code:", error.response.status);
+
+    } else if (error.request) {
+
+      // Request was sent but no response received
+
+      console.log("Network Error:", error.request);
+
+    } else {
+
+      // Error in setting up the request
+
+      console.log("Other Error:", error.message);
+
+    }
+
+  });
+
+    API.get("/owner/ratings").then((res) => setRatings(res.data));
   }, []);
 
   if (!store) return <h3 className="text-center">Loading...</h3>;

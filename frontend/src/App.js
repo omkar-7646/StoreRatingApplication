@@ -16,27 +16,71 @@ import OwnerAddStore from "./pages/OwnerAddStore";
 import OwnerChangePassword from "./pages/OwnerChangePassword";
 import OwnerLogin from "./pages/OwnerLogin";
 
-function App(){
+function App() {
+
   const [user, setUser] = useState(null);
+
+  const [loading, setLoading] = useState(true);
+
+ 
+
   useEffect(() => {
+
     const token = localStorage.getItem("token");
+
+ 
+
     if (token) {
+
       setAuthToken(token);
-      API.get("/users/me").then(res => setUser(res.data)).catch(()=> localStorage.removeItem("token"));
+
+      API.get("/users/me")
+
+        .then(res => setUser(res.data))
+
+        .catch(() => localStorage.removeItem("token"))
+
+        .finally(() => setLoading(false));
+
+    } else {
+
+      setLoading(false);
+
     }
+
   }, []);
+
+ 
+
+  if (loading) return <div>Loading...</div>;
+
+
+
+
+
+
+
   return (
     <BrowserRouter>
       <Navbar user={user} setUser={setUser} />
       <div className="page-container mt-4">
         <Routes>
-          <Route path="/" element={<StoreList user={user} />} />
           <Route path="/login" element={<Login setUser={setUser} />} />
+          <Route path="/" element={<StoreList user={user} />} />          
           <Route path="/register" element={<Register />} />
           <Route path="/stores/:id" element={<StoreDetail user={user} />} />
           <Route path="/profile" element={<ProtectedRoute user={user}><Profile user={user} setUser={setUser} /></ProtectedRoute>} />
-          <Route path="/admin" element={<ProtectedRoute user={user} roles={["admin"]}><AdminDashboard /></ProtectedRoute>} />
-          <Route path="/admin/login" element={<AdminLogin />} />
+<Route  path="/admin"  element={
+
+    <ProtectedRoute user={user} loading={loading} roles={["admin"]}>
+
+      <AdminDashboard />
+
+    </ProtectedRoute>
+
+  }
+
+/>          <Route path="/admin/login"  element={<AdminLogin setUser={setUser} />} />
           <Route path="/admin/stores/create"element={<ProtectedRoute user={user} roles={["admin"]}><AdminCreateStore /></ProtectedRoute>}/>
           <Route path="/owner" element={<ProtectedRoute user={user} roles={["owner"]}><OwnerDashboard user={user} /></ProtectedRoute>} />
           <Route path="/owner/login" element={<OwnerLogin setUser={setUser} />} />

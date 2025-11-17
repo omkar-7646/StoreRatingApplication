@@ -12,7 +12,7 @@ export default function OwnerLogin({ setUser }) {
     try {
       const res = await API.post("/auth/login", form);
       const { user, token } = res.data;
-
+      console.log(res.data)
       if (user.role !== "owner") {
         setError("Only store owners can login here");
         return;
