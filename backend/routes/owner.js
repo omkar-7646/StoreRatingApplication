@@ -1,40 +1,36 @@
 import express from "express";
 import { authenticate } from "../middleware/auth.js";
 import { permit } from "../middleware/roles.js";
-import {
-  getMyStore,
-  createMyStore,
-  getMyStoreRatings,
-  updateOwnerPassword,
-} from "../controllers/ownerController.js";
+import { Rating, Store, User } from "../models/index.js";
+import { fn, col } from "sequelize";
 
 const router = express.Router();
 
-// Only authenticated owners can access these routes
 router.use(authenticate, permit("owner"));
 
-/**
- * GET /api/owner/store
- * Fetch owner’s store (if exists)
- */
-router.get("/stores", getMyStore);
+// Owner dashboard
+router.get("/dashboard", async (req, res) => {
+  const store = await Store.findOne({ where: { ownerId: req.user.id } });
 
-/**
- * POST /api/owner/store
- * Create store (an owner can create only ONE store)
- */
-router.post("/store", createMyStore);
+  if (!store) return res.json({ store: null, ratings: [], average: 0 });
 
-/**
- * GET /api/owner/ratings
- * Get all ratings submitted for the owner’s store
- */
-router.get("/ratings", getMyStoreRatings);
+  const ratings = await Rating.findAll({
+    where: { storeId: store.id },
+    include: [{ model: User, attributes: ["name", "email"] }]
+  });
 
-/**
- * PUT /api/owner/password
- * Update owner password
- */
-router.put("/password", updateOwnerPassword);
+  // 🔥 FIXED: Changed score → rating
+  const avg = await Rating.findOne({
+    where: { storeId: store.id },
+    attributes: [[fn("AVG", col("rating")), "avgRating"]],
+    raw: true
+  });
+
+  res.json({
+    store,
+    ratings,
+    average: avg?.avgRating || 0
+  });
+});
 
 export default router;

@@ -1,95 +1,68 @@
-import React, { useEffect, useState } from "react";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
-import API, { setAuthToken } from "./api/api";
-import Navbar from "./components/Navbar";
+import React from "react";
+import { Routes, Route, Link, useNavigate } from "react-router-dom";
+import LoginLanding from "./pages/LoginLanding";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
-import StoreList from "./pages/StoreList";
+import Home from "./pages/Home";
 import StoreDetail from "./pages/StoreDetail";
 import AdminDashboard from "./pages/AdminDashboard";
+import AdminUsers from "./pages/AdminUsers";
+import AdminStores from "./pages/AdminStores";
 import OwnerDashboard from "./pages/OwnerDashboard";
-import Profile from "./pages/Profile";
+import UserDashboard from "./pages/UserDashboard";
 import ProtectedRoute from "./components/ProtectedRoute";
-import AdminCreateStore from "./pages/AdminCreateStore";
-import AdminLogin from "./pages/AdminLogin";
-import OwnerAddStore from "./pages/OwnerAddStore";
-import OwnerChangePassword from "./pages/OwnerChangePassword";
-import OwnerLogin from "./pages/OwnerLogin";
 
-function App() {
-
-  const [user, setUser] = useState(null);
-
-  const [loading, setLoading] = useState(true);
-
- 
-
-  useEffect(() => {
-
-    const token = localStorage.getItem("token");
-
- 
-
-    if (token) {
-
-      setAuthToken(token);
-
-      API.get("/users/me")
-
-        .then(res => setUser(res.data))
-
-        .catch(() => localStorage.removeItem("token"))
-
-        .finally(() => setLoading(false));
-
-    } else {
-
-      setLoading(false);
-
-    }
-
-  }, []);
-
- 
-
-  if (loading) return <div>Loading...</div>;
-
-
-
-
-
-
-
+function Nav() {
+  const navigate = useNavigate();
+  const user = JSON.parse(localStorage.getItem("user") || "null");
+  const logout = () => {
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
+    navigate("/");
+    window.location.reload();
+  };
   return (
-    <BrowserRouter>
-      <Navbar user={user} setUser={setUser} />
-      <div className="page-container mt-4">
-        <Routes>
-          <Route path="/login" element={<Login setUser={setUser} />} />
-          <Route path="/" element={<StoreList user={user} />} />          
-          <Route path="/register" element={<Register />} />
-          <Route path="/stores/:id" element={<StoreDetail user={user} />} />
-          <Route path="/profile" element={<ProtectedRoute user={user}><Profile user={user} setUser={setUser} /></ProtectedRoute>} />
-<Route  path="/admin"  element={
-
-    <ProtectedRoute user={user} loading={loading} roles={["admin"]}>
-
-      <AdminDashboard />
-
-    </ProtectedRoute>
-
-  }
-
-/>          <Route path="/admin/login"  element={<AdminLogin setUser={setUser} />} />
-          <Route path="/admin/stores/create"element={<ProtectedRoute user={user} roles={["admin"]}><AdminCreateStore /></ProtectedRoute>}/>
-          <Route path="/owner" element={<ProtectedRoute user={user} roles={["owner"]}><OwnerDashboard user={user} /></ProtectedRoute>} />
-          <Route path="/owner/login" element={<OwnerLogin setUser={setUser} />} />
-          <Route path="/owner/add-store" element={<ProtectedRoute user={user} roles={["owner"]}><OwnerAddStore /></ProtectedRoute>}/>
-          <Route path="/owner/change-password" element={<ProtectedRoute user={user} roles={["owner"]}><OwnerChangePassword /></ProtectedRoute>}/>
-        </Routes>
+    <nav className="navbar navbar-expand-lg navbar-light bg-light mb-3">
+      <div className="container">
+        <Link className="navbar-brand" to="/">StoreRate</Link>
+        <div>
+          <ul className="navbar-nav ms-auto d-flex align-items-center">
+            <li className="nav-item me-2"><Link className="nav-link" to="/">Stores</Link></li>
+            {!user && <>
+              <li className="nav-item me-2"><Link className="btn btn-outline-primary" to="/login">Login</Link></li>
+              <li className="nav-item"><Link className="btn btn-success" to="/register">Signup</Link></li>
+            </>}
+            {user && <>
+              <li className="nav-item me-2"><span className="nav-link">Hi, {user.name}</span></li>
+              {user.role === "admin" && <li className="nav-item me-2"><Link className="btn btn-outline-secondary" to="/admin">Admin</Link></li>}
+              {user.role === "owner" && <li className="nav-item me-2"><Link className="btn btn-outline-secondary" to="/owner">Owner</Link></li>}
+              <li className="nav-item"><button className="btn btn-danger" onClick={logout}>Logout</button></li>
+            </>}
+          </ul>
+        </div>
       </div>
-    </BrowserRouter>
+    </nav>
   );
 }
 
-export default App;
+export default function App(){
+  return (
+    <>
+      <Nav />
+      <div className="container">
+        <Routes>
+          <Route path="/" element={<ProtectedRoute roles={['user', 'owner', 'admin']}><Home /></ProtectedRoute>}/>
+          <Route path="/store/:id" element={<StoreDetail />} />
+          <Route path="/login" element={<Login />} />
+          <Route path="/login-landing" element={<LoginLanding />} />
+          <Route path="/register" element={<Register />} />
+          <Route path="/admin" element={<ProtectedRoute roles={['admin']}><AdminDashboard/></ProtectedRoute>} />
+          <Route path="/admin/users" element={<ProtectedRoute roles={['admin']}><AdminUsers/></ProtectedRoute>} />
+          <Route path="/admin/stores" element={<ProtectedRoute roles={['admin']}><AdminStores/></ProtectedRoute>} />
+          <Route path="/owner" element={<ProtectedRoute roles={['owner']}><OwnerDashboard/></ProtectedRoute>} />
+          <Route path="/user" element={<ProtectedRoute roles={['user']}><UserDashboard/></ProtectedRoute>} />
+        </Routes>
+      </div>
+    </>
+  );
+}

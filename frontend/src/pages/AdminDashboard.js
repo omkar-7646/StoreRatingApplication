@@ -1,26 +1,55 @@
 import React, { useEffect, useState } from "react";
-import API from "../api/api.js";
+import API from "../api";
+import { Link } from "react-router-dom";
 
-export default function AdminDashboard(){
-  const [stats, setStats] = useState({});
-  const [users, setUsers] = useState([]);
+export default function AdminDashboard() {
+  const [data, setData] = useState({
+    totalUsers: 0,
+    totalStores: 0,
+    totalRatings: 0,
+  });
 
-  useEffect(()=>{
-    API.get("/admin/stats").then(res=>setStats(res.data));
-    API.get("/admin/users").then(res=>setUsers(res.data.rows || res.data));
-  },[]);
+  useEffect(() => {
+    API.get("/admin/stats")
+      .then((res) => setData(res.data))
+      .catch((err) => console.error("STATS ERROR:", err));
+  }, []);
 
   return (
-    <div className="admin-dashboard">
-      <h2>Admin Dashboard</h2>
-      <div className="admin-stats d-flex mb-3">
-        <div className="stat-box me-3"><div>Total Users</div><div className="h4">{stats.totalUsers}</div></div>
-        <div className="stat-box me-3"><div>Total Stores</div><div className="h4">{stats.totalStores}</div></div>
-        <div className="stat-box"><div>Total Ratings</div><div className="h4">{stats.totalRatings}</div></div>
+    <div>
+      <h3 className="mb-3">Admin Dashboard</h3>
+
+      <div className="row mb-4">
+        <div className="col-md-4 mb-2">
+          <div className="card p-3 shadow-sm">
+            <h5>Total Users</h5>
+            <div className="display-6">{data.totalUsers}</div>
+          </div>
+        </div>
+
+        <div className="col-md-4 mb-2">
+          <div className="card p-3 shadow-sm">
+            <h5>Total Stores</h5>
+            <div className="display-6">{data.totalStores}</div>
+          </div>
+        </div>
+
+        <div className="col-md-4 mb-2">
+          <div className="card p-3 shadow-sm">
+            <h5>Total Ratings</h5>
+            <div className="display-6">{data.totalRatings}</div>
+          </div>
+        </div>
       </div>
-      <h4>Users</h4>
-      <div className="admin-users-list">
-        {users.map(u => <div key={u.id} className="p-2 border-bottom">{u.name} — {u.email} — <em>{u.role}</em></div>)}
+
+      <div className="mb-3">
+        <Link to="/admin/users" className="btn btn-primary me-2">
+          Manage Users
+        </Link>
+
+        <Link to="/admin/stores" className="btn btn-secondary">
+          Manage Stores
+        </Link>
       </div>
     </div>
   );

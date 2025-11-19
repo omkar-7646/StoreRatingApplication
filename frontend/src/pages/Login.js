@@ -1,34 +1,67 @@
 import React, { useState } from "react";
-import API, { setAuthToken } from "../api/api";
+import API from "../api";
 import { useNavigate } from "react-router-dom";
-import "../styles/components/StoreCard.css";
 
-export default function Login({ setUser }) {
-  const [form, setForm] = useState({ email:"", password:"" });
-  const [error, setError] = useState("");
+export default function Login() {
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const nav = useNavigate();
-  const submit = async (e) => {
+  const [error, setError] = useState("");
+
+  async function submit(e) {
     e.preventDefault();
     try {
-      const res = await API.post("/auth/login", form);
-      const { token, user } = res.data;
-      localStorage.setItem("token", token);
-      setAuthToken(token);
-      setUser(user);
-      nav("/");
+      const { data } = await API.post("/auth/login", { email, password });
+
+      localStorage.setItem("token", data.token);
+      localStorage.setItem("user", JSON.stringify(data.user));
+
+      if (data.user.role === "admin") nav("/admin");
+      else if (data.user.role === "owner") nav("/owner");
+      else nav("/");
+
+      window.location.reload();
     } catch (err) {
-      setError(err.response?.data?.message || "Login failed");
+      setError("Invalid credentials");
     }
-  };
+  }
+
   return (
-    <div className="auth-container">
-      <h2 className="mb-3">Login</h2>
-      {error && <div className="alert alert-danger">{error}</div>}
-      <form onSubmit={submit}>
-        <div className="mb-2"><input className="form-control" placeholder="Email" value={form.email} onChange={e=>setForm({...form,email:e.target.value})} /></div>
-        <div className="mb-2"><input type="password" className="form-control" placeholder="Password" value={form.password} onChange={e=>setForm({...form,password:e.target.value})} /></div>
-        <button className="btn btn-primary w-100">Login</button>
-      </form>
+    <div className="container" style={{ maxWidth: 450, marginTop: 80 }}>
+      <div className="card p-4 shadow">
+        <h2 className="text-center mb-3">Welcome Back!</h2>
+
+        <p className="text-muted text-center" style={{ fontSize: "14px" }}>
+          ⭐ To explore stores, submit ratings and enjoy the platform —
+          <br />
+          <strong>Please login with your account.</strong>
+          <br />
+          If you are a shop owner, login as Owner.  
+          <br />
+          If you are system administrator, login as Admin.
+        </p>
+
+        {error && <div className="alert alert-danger">{error}</div>}
+
+        <form onSubmit={submit}>
+          <input
+            className="form-control mb-3"
+            placeholder="Email"
+            onChange={(e) => setEmail(e.target.value)}
+            required
+          />
+
+          <input
+            type="password"
+            className="form-control mb-3"
+            placeholder="Password"
+            onChange={(e) => setPassword(e.target.value)}
+            required
+          />
+
+          <button className="btn btn-primary w-100">Login</button>
+        </form>
+      </div>
     </div>
   );
 }

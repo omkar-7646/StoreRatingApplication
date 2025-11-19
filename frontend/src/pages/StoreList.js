@@ -17,7 +17,7 @@ export default function StoreList({ user }) {
   }, [q, sortBy]);
 
   const handleRate = async (storeId, rating) => {
-    await API.post("/ratings", { storeId, rating });
+    await API.post("/ratings", { storeId, rating, comment: "" });
     fetchStores();
   };
 

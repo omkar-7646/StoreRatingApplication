@@ -1,34 +1,58 @@
 import { Rating, Store } from "../models/index.js";
+import { sequelize } from "../models/index.js";
 
 export const submitRating = async (req, res) => {
   try {
-    const { storeId, rating } = req.body;
-    const userId = req.user.id;
-    if (!Number.isInteger(rating) || rating < 1 || rating > 5) return res.status(400).json({ message: "Rating must be integer 1-5" });
+    const storeId = req.params.id;   // <-- FIXED (getting ID from URL)
+    const { rating, comment } = req.body;
 
-    const existing = await Rating.findOne({ where: { userId, storeId } });
+    if (!rating) {
+      return res.status(400).json({ message: "Rating is required" });
+    }
+
+    if (rating < 1 || rating > 5) {
+      return res.status(400).json({ message: "Rating must be 1-5" });
+    }
+
+    // Check if rating exists (update instead of duplicate)
+    let existing = await Rating.findOne({
+      where: { userId: req.user.id, storeId }
+    });
 
     if (existing) {
       existing.rating = rating;
+      existing.comment = comment;
       await existing.save();
     } else {
-      await Rating.create({ userId, storeId, rating });
+      existing = await Rating.create({
+        storeId,
+        userId: req.user.id,
+        rating,
+        comment
+      });
     }
 
-    const ratings = await Rating.findAll({ where: { storeId } });
-    const avg = ratings.reduce((s, r) => s + r.rating, 0) / (ratings.length || 1);
-    const store = await Store.findByPk(storeId);
-    store.averageRating = avg;
-    await store.save();
+    // Recalculate average rating properly
+    const avg = await Rating.findOne({
+      where: { storeId },
+      attributes: [
+        [sequelize.fn("AVG", sequelize.col("rating")), "avgRating"]
+      ],
+      raw: true,
+    });
 
-    res.json({ message: "Rating submitted", averageRating: store.averageRating });
+    await Store.update(
+      { averageRating: Number(avg.avgRating) || 0 },
+      { where: { id: storeId } }
+    );
+
+    res.status(201).json({
+      message: "Rating submitted",
+      rating: existing
+    });
+
   } catch (err) {
+    console.error("Rating Error:", err);
     res.status(500).json({ message: err.message });
   }
-};
-
-export const getRatingsForStore = async (req, res) => {
-  const storeId = req.params.storeId;
-  const ratings = await Rating.findAll({ where: { storeId }, include: ["user"] });
-  res.json(ratings);
 };
