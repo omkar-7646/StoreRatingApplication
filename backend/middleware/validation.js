@@ -1,5 +1,6 @@
 export const validateUserPayload = (req, res, next) => {
   const { name, email, password, address } = req.body;
+  console.log(name, email, password)
   if (!name || name.length < 20 || name.length > 60) {
     return res.status(400).json({ message: "Name must be between 20 and 60 characters." });
   }
