@@ -20,11 +20,14 @@ const app = express();
 app.use(
   cors({
     origin: [
-      "https://storeratingapplication.netlify.app/" || "http://localhost:3000",
+      "https://storeratingapplication.netlify.app",
+      "http://localhost:3000",
     ],
     credentials: true,
   })
 );
+
+app.options("*", cors());
 
 app.use(express.json());
 
