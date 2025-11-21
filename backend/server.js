@@ -52,4 +52,4 @@ dbInit().then(() => {
 });
 
 
-//  https://storeratingapplication.netlify.app/
+//  https://storeratingapplication.netlify.app/   frontend published url (netlify)
