@@ -1,7 +1,7 @@
 import axios from "axios";
 
 const API = axios.create({
-  baseURL: process.env.REACT_APP_API_URL || "http://localhost:5000/api"
+  baseURL: "https://storeratingapplication.onrender.com/api"
 });
 
 API.interceptors.request.use((config) => {
@@ -11,3 +11,6 @@ API.interceptors.request.use((config) => {
 });
 
 export default API;
+
+
+// "http://localhost:5000/api"
